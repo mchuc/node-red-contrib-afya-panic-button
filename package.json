@@ -1,0 +1,16 @@
+{
+  "name": "node-red-contrib-afya-panic-button",
+  "version": "0.0.1",
+  "description": "the node reports PANIC or any fixed value when it is called Y times in X seconds",
+  "keywords": [
+    "panic",
+    "button"
+  ],
+  "author": "Marcin Chuć, marcin@afya.pl",
+  "license": "Creative Common",
+   "node-red" : {
+        "nodes": {
+            "afya-panic-button": "afya-panic-button.js"
+        }
+    }
+}

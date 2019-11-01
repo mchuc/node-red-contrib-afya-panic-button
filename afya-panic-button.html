@@ -1,0 +1,80 @@
+<!-- /**
+* PanicButton by Marcin Chuć
+* e-mail: marcin ...change it to at... afya.pl
+* (C) 2019
+*/ -->
+<script type="text/javascript">
+  RED.nodes.registerType('afya-panic-button', {
+    category: 'function',
+    color: '#FA42B2',
+    defaults: {
+      name: {
+        value: ""
+      },
+      variableName: {
+        value: "AFYA_" + Math.random().toString(36).substr(2, 5),
+        required: true
+      },
+      timeToClick: {
+        value: 10,
+        required: true,
+        validate: RED.validators.number()
+      },
+      howManyTimesToClick: {
+        value: 5,
+        required: true,
+        validate: RED.validators.number()
+      },
+      answerOk: {
+        value: "panic",
+        required: true
+      },
+      answerFalse: {
+        value: "dont_panic",
+        required: true
+      },
+
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: "alarm-light.png",
+    label: function() {
+      return this.name || this.answerOk + " after " + this.howManyTimesToClick + " times in " + this.timeToClick + " s";
+    }
+  });
+</script>
+
+<script type="text/x-red" data-template-name="afya-panic-button">
+  <div class="form-row">
+         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+         <input type="text" id="node-input-name" placeholder="Name">
+     </div>
+     <div class="form-row">
+            <label for="node-config-input-variableName"><i class="icon-bookmark"></i> Variable name</label>
+            <input type="text" id="node-input-variableName" placeholder="Your_Unique_Variable_Name">
+        </div>
+        <div class="form-row">
+       <label for="node-config-input-timeToClick"><i class="icon-clock"></i> Time to click/execute</label>
+       <input type="text" id="node-input-timeToClick">
+   </div>
+   <div class="form-row">
+       <label for="node-config-input-howManyTimesToClick"><i class="icon-calculator"></i> How many times to "click"</label>
+       <input type="text" id="node-input-howManyTimesToClick">
+   </div>
+   <div class="form-row">
+       <label for="node-config-input-answerOk"><i class="icon-bookmark"></i> Answer if panic</label>
+       <input type="text" id="node-input-answerOk">
+   </div>
+   <div class="form-row">
+       <label for="node-config-input-answerFalse"><i class="icon-bookmark"></i> Answer if don't panic</label>
+       <input type="text" id="node-input-answerFalse">
+   </div>
+
+ </script>
+
+
+
+<script type="text/x-red" data-help-name="afya-panic-button">
+  <p>A simple node that reports PANIC or any fixed value when it is called Y times in X seconds</p>
+  <p>Prosty węzeł który  zgłasza PANIC lub dowolną ustaloną wartość kiedy w czasie X sekund zostanie wywołany Y razy</p>
+ </script>
