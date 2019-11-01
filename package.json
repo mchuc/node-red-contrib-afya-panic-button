@@ -11,7 +11,7 @@
     "type": "git",
     "url": "https://github.com/mchuc/node-red-contrib-afya-panic-button"
   },
-  "author": "Marcin Chuć, marcin@afya.pl",
+  "author": "Marcin Chuć, marcin a.t afya.pl",
   "license": "Creative Common",
    "node-red" : {
         "nodes": {

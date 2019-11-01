@@ -24,7 +24,7 @@ module.exports = function(RED) {
   // what if panicButton isn't declared
   if (panicButton.count===undefined)
   {
-    panicButton.count=1;
+    panicButton.count=0;
   }
   if (panicButton.timestamp===undefined)
   {
