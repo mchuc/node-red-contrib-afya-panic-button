@@ -1,3 +1,5 @@
+0.0.6:
+- last call date added into node status
 0.0.5:
 - cleaning
 - change the variable name from answerOk to answerPanic, and answerFalse to answerDontPanic

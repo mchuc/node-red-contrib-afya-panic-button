@@ -5,6 +5,9 @@
  */
 
 module.exports = function(RED) {
+  /**
+   main function
+  */
   function AFYAPanicButton(config) {
     RED.nodes.createNode(this, config);
     var node = this;
@@ -37,7 +40,7 @@ module.exports = function(RED) {
         this.status({
           fill: "green",
           shape: "ring",
-          text: "state: " + answerDontPanic + " - " + panicButton.count + "/" + howManyTimesToClick + " left: " + timeLeft + " seconds"
+          text: "state: " + answerDontPanic + " - " + panicButton.count + "/" + howManyTimesToClick + " left: " + timeLeft + " seconds <" + timeConvert(timestamp) + ">"
         });
       } else // and if don't - reset counter
       {
@@ -46,18 +49,18 @@ module.exports = function(RED) {
         this.status({
           fill: "green",
           shape: "ring",
-          text: "state: " + answerDontPanic + " - " + panicButton.count + "/" + howManyTimesToClick + " left: " + timeToClick + " seconds"
+          text: "state: " + answerDontPanic + " - " + panicButton.count + "/" + howManyTimesToClick + " left: " + timeToClick + " seconds <" + timeConvert(timestamp) + ">"
         });
       }
 
-      // recommended number of clicks reached: report OK
+      // recommended number of clicks reached: report Panic
       if (panicButton.count > howManyTimesToClick - 1) {
         panicButton.count = 0;
         panicButton.timestamp = timestamp;
         this.status({
           fill: "red",
           shape: "dot",
-          text: "state: " + answerPanic + " - " + howManyTimesToClick + "/" + howManyTimesToClick + " timestamp:" + timestamp
+          text: "state: " + answerPanic + " - " + howManyTimesToClick + "/" + howManyTimesToClick + " timestamp:" + timestamp + " <" + timeConvert(timestamp) + ">"
         });
         msg = {
           payload: {
@@ -77,9 +80,21 @@ module.exports = function(RED) {
       }
       // save my variable
       this.context().flow.set(variableName, panicButton);
-
+      //fire message
       node.send(msg);
     });
   }
+
+  /**
+  function timeConvert returns string from given timestamp as: 2010-10-1 17:09:11
+  */
+  function timeConvert(myTimeStamp) {
+    var d = new Date(myTimeStamp);
+    var time = [d.getFullYear(), d.getMonth() + 1, d.getDate()].join('/') + ' ' + [d.getHours(), d.getMinutes(), d.getSeconds()].join(':');
+    return time;
+  }
+
+
+  //register node
   RED.nodes.registerType("afya-panic-button", AFYAPanicButton);
 }
