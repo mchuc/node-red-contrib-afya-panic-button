@@ -4,18 +4,17 @@
 * (C) 2019
 */ -->
 <script type="text/javascript">
-Math.seed= Date.now();
-Math.seed = (Math.seed * 9301 + 49297) % 233280;
+  Math.seed = Date.now();
   RED.nodes.registerType('afya-panic-button', {
     category: 'function',
     color: '#FA42B2',
-    paletteLabel:'panic button',
+    paletteLabel: 'panic button',
     defaults: {
       name: {
         value: ""
       },
       variableName: {
-        value: "AFYA_" + Math.random().toString(36).substr(2, 5)+Date.now().toString().substr(-3),
+        value: "AFYA_" + Math.random().toString(36).substr(2, 5) + Date.now().toString().substr(-3),
         required: true,
       },
       timeToClick: {
@@ -28,11 +27,11 @@ Math.seed = (Math.seed * 9301 + 49297) % 233280;
         required: true,
         validate: RED.validators.number()
       },
-      answerOk: {
+      answerPanic: {
         value: "panic",
         required: true
       },
-      answerFalse: {
+      answerDontPanic: {
         value: "dont_panic",
         required: true
       },
@@ -42,9 +41,10 @@ Math.seed = (Math.seed * 9301 + 49297) % 233280;
     outputs: 1,
     icon: "alarm-light.png",
     label: function() {
-      return this.name || this.answerOk + " after " + this.howManyTimesToClick + " times in " + this.timeToClick + " s";
+      return this.name || this.answerPanic + " after " + this.howManyTimesToClick + " times in " + this.timeToClick + " s";
     }
   });
+
 </script>
 
 <script type="text/x-red" data-template-name="afya-panic-button">
@@ -65,19 +65,21 @@ Math.seed = (Math.seed * 9301 + 49297) % 233280;
        <input type="text" id="node-input-howManyTimesToClick">
    </div>
    <div class="form-row">
-       <label for="node-config-input-answerOk"><i class="icon-bookmark"></i> Answer if panic</label>
-       <input type="text" id="node-input-answerOk">
+       <label for="node-config-input-answerPanic"><i class="icon-bookmark"></i> Answer if panic</label>
+       <input type="text" id="node-input-answerPanic">
    </div>
    <div class="form-row">
-       <label for="node-config-input-answerFalse"><i class="icon-bookmark"></i> Answer if don't panic</label>
-       <input type="text" id="node-input-answerFalse">
+       <label for="node-config-input-answerDontPanic"><i class="icon-bookmark"></i> Answer if don't panic</label>
+       <input type="text" id="node-input-answerDontPanic">
    </div>
 
  </script>
 
-
-
 <script type="text/x-red" data-help-name="afya-panic-button">
-  <p>A simple node that reports PANIC or any fixed value when it is called Y times in X seconds</p>
-  <p>Prosty węzeł który  zgłasza PANIC lub dowolną ustaloną wartość kiedy w czasie X sekund zostanie wywołany Y razy</p>
+  <p>A simple node that reports "panic" or any fixed value when it is called Y times in X seconds<br>
+  <b>
+Please pay special attention to the 'variable name' because it is not created completely randomly (and should be for each node added), unless many nodes are to support 1 variable in the same flow.</b></p>
+
+  <p>Prosty węzeł który  zgłasza "panic" lub dowolną ustaloną wartość kiedy w czasie X sekund zostanie wywołany Y razy<br>
+  <b>Proszę zwrócić szczególną uwagę na 'Variable name', gdyż nie tworzy się ona zupełnie randomowo (a powinna dla każdego dodanego węzła), chyba, że wiele węzłów ma obsługiwać 1 zmienną w tym samym flow.</b></p>
  </script>

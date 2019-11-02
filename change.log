@@ -1,0 +1,8 @@
+0.0.5:
+- cleaning
+- change the variable name from answerOk to answerPanic, and answerFalse to answerDontPanic
+- adding node states
+
+
+0.0.4 and below:
+- first versions of the add-on with minor preliminary changes
