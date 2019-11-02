@@ -1,17 +1,21 @@
 {
   "name": "node-red-contrib-afya-panic-button",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "the node reports PANIC or any fixed value when it is called Y times in X seconds",
   "keywords": [
     "panic",
     "button",
     "node-red"
   ],
-  "author": "Marcin Chuć, marcin -at - afya.pl",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mchuc/node-red-contrib-afya-panic-button"
+  },
+  "author": "Marcin Chuć, marcin a.t afya.pl",
   "license": "Creative Common",
-   "node-red" : {
-        "nodes": {
-            "afya-panic-button": "afya-panic-button/afya-panic-button.js"
-        }
+  "node-red": {
+    "nodes": {
+      "afya-panic-button": "afya-panic-button/afya-panic-button.js"
     }
+  }
 }
