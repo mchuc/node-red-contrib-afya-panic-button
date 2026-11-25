@@ -1,100 +1,78 @@
 /**
- * PanicButton by Marcin Chuć
- * e-mail: marcin ...change it to at... afya.pl
- * (C) 2019
+ * AFYA Panic Button – reports "panic" (or any value) when called Y times within X seconds.
+ * (C) 2019–2026 Marcin Chuć · MIT
  */
+'use strict';
 
-module.exports = function(RED) {
-  /**
-   main function
-  */
+function hhmmss(d = new Date()) {
+  return [d.getHours(), d.getMinutes(), d.getSeconds()].map((n) => String(n).padStart(2, '0')).join(':');
+}
+
+/**
+ * One click. Returns the new state and whether panic was reached.
+ * state = { count, timestamp } – timestamp is the start of the current series.
+ */
+function click(state, now, windowMs, needed) {
+  const s = state && typeof state === 'object' ? { ...state } : {};
+  if (typeof s.count !== 'number') s.count = 0;
+  if (typeof s.timestamp !== 'number') s.timestamp = now;
+
+  if (s.timestamp + windowMs > now) {
+    s.count += 1;
+  } else {
+    // too late – a new series starts with this click
+    s.count = 1;
+    s.timestamp = now;
+  }
+  if (s.count >= needed) {
+    return { state: { count: 0, timestamp: now }, panic: true };
+  }
+  return { state: s, panic: false };
+}
+
+module.exports = function (RED) {
   function AFYAPanicButton(config) {
     RED.nodes.createNode(this, config);
-    var node = this;
-    node.on('input', function(msg) {
+    const node = this;
 
-      // my Panic Button variable
-      var variableName = config.variableName;
-      // how many time to click x times
-      var timeToClick = config.timeToClick; //seconds
-      // how many times to click
-      var howManyTimesToClick = config.howManyTimesToClick;
-      // set the answers
-      var answerPanic = config.answerPanic;
-      var answerDontPanic = config.answerDontPanic;
-      var timestamp = Date.now();
-      var panicButton = this.context().flow.get(variableName) || {};
-      // what if panicButton isn't declared
-      if (panicButton.count === undefined) {
-        panicButton.count = 0;
-      }
-      if (panicButton.timestamp === undefined) {
-        panicButton.timestamp = timestamp;
-      }
+    // legacy nodes (no scope saved) keep using flow context
+    const scope = config.scope === 'global' ? 'global' : 'flow';
+    let name = String(config.variableName || '').trim();
+    if (!name) name = `AFYA_panic_${node.id}`;
+    const { key, store } = RED.util.parseContextStore(name);
+    const ctx = () => node.context()[scope];
 
+    const seconds = Math.abs(Number(config.timeToClick)) || 10;
+    const needed = Math.max(1, Math.round(Math.abs(Number(config.howManyTimesToClick))) || 5);
+    const answerPanic = config.answerPanic === undefined || config.answerPanic === '' ? 'panic' : config.answerPanic;
+    const answerDontPanic =
+      config.answerDontPanic === undefined || config.answerDontPanic === '' ? 'dont_panic' : config.answerDontPanic;
 
-      // if clickable arrives within a set time
-      if (panicButton.timestamp + (timeToClick * 1000) > timestamp) {
-        panicButton.count++;
-        var timeLeft = Math.round((timeToClick * 100) - ((timestamp - panicButton.timestamp) / 10)) / 100;
-        this.status({
-          fill: "green",
-          shape: "ring",
-          text: "state: " + answerDontPanic + " - " + panicButton.count + "/" + howManyTimesToClick + " left: " + timeLeft + " seconds <" + timeConvert(timestamp) + ">"
+    node.status({ fill: 'grey', shape: 'ring', text: `${needed}× in ${seconds} s · ${scope}.${key}` });
+
+    node.on('input', (msg, send, done) => {
+      const now = Date.now();
+      const result = click(ctx().get(key, store), now, seconds * 1000, needed);
+      ctx().set(key, result.state, store);
+
+      if (result.panic) {
+        node.status({ fill: 'red', shape: 'dot', text: `${answerPanic} · ${needed}/${needed} · ${hhmmss()}` });
+        msg.payload = { state: answerPanic, count: needed, timestamp: now };
+      } else {
+        const left = Math.max(0, (result.state.timestamp + seconds * 1000 - now) / 1000);
+        node.status({
+          fill: 'green',
+          shape: 'ring',
+          text: `${answerDontPanic} · ${result.state.count}/${needed} · ${left.toFixed(1)} s left · ${hhmmss()}`,
         });
-      } else // and if don't - reset counter
-      {
-        panicButton.count = 1;
-        panicButton.timestamp = timestamp;
-        this.status({
-          fill: "green",
-          shape: "ring",
-          text: "state: " + answerDontPanic + " - " + panicButton.count + "/" + howManyTimesToClick + " left: " + timeToClick + " seconds <" + timeConvert(timestamp) + ">"
-        });
+        msg.payload = { state: answerDontPanic, count: result.state.count, timestamp: result.state.timestamp };
       }
-
-      // recommended number of clicks reached: report Panic
-      if (panicButton.count > howManyTimesToClick - 1) {
-        panicButton.count = 0;
-        panicButton.timestamp = timestamp;
-        this.status({
-          fill: "red",
-          shape: "dot",
-          text: "state: " + answerPanic + " - " + howManyTimesToClick + "/" + howManyTimesToClick + " timestamp:" + timestamp + " <" + timeConvert(timestamp) + ">"
-        });
-        msg = {
-          payload: {
-            state: answerPanic,
-            timestamp: panicButton.timestamp
-          }
-        };
-      } else //if don't
-      {
-        msg = {
-          payload: {
-            state: answerDontPanic,
-            count: panicButton.count,
-            timestamp: panicButton.timestamp
-          }
-        };
-      }
-      // save my variable
-      this.context().flow.set(variableName, panicButton);
-      //fire message
-      node.send(msg);
+      send(msg);
+      done();
     });
   }
 
-  /**
-  function timeConvert returns string from given timestamp as: 2010-10-1 17:09:11
-  */
-  function timeConvert(myTimeStamp) {
-    var d = new Date(myTimeStamp);
-    var time = [d.getFullYear(), d.getMonth() + 1, d.getDate()].join('/') + ' ' + [d.getHours(), d.getMinutes(), d.getSeconds()].join(':');
-    return time;
-  }
+  RED.nodes.registerType('afya-panic-button', AFYAPanicButton);
+};
 
-
-  //register node
-  RED.nodes.registerType("afya-panic-button", AFYAPanicButton);
-}
+module.exports.click = click;

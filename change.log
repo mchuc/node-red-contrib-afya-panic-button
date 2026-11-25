@@ -1,3 +1,13 @@
+0.1.0 (2026-11-25):
+- Fixed: the default variable name was the same for every node added in one editor session
+- Variable scope: global or flow (new nodes: global, existing nodes keep flow) + context stores
+- payload.count is also sent with the panic state
+- Message properties (e.g. msg.topic) are kept
+- New modern edit dialog (sections, live summary, spinners, validation), palette category "AFYA",
+  Font Awesome icon, English UI with English + Polish help
+- Short, consistent node status (value · time)
+- MIT license, Node-RED >= 3.0, Node.js >= 18, unit tests (`npm test`)
+
 0.0.6:
 - last call date added into node status
 0.0.5:

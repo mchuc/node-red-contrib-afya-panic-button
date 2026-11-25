@@ -1,21 +1,46 @@
 {
   "name": "node-red-contrib-afya-panic-button",
-  "version": "0.0.8",
-  "description": "the node reports PANIC or any fixed value when it is called Y times in X seconds",
+  "version": "0.1.0",
+  "description": "Node-RED panic button: reports \"panic\" (or any value) when it receives Y messages within X seconds – e.g. one remote button pressed 5× in 10 s.",
+  "main": "afya-panic-button/afya-panic-button.js",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
   "keywords": [
+    "node-red",
+    "afya",
     "panic",
     "button",
-    "node-red"
+    "remote",
+    "multi-click",
+    "alarm",
+    "global",
+    "context"
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/mchuc/node-red-contrib-afya-panic-button"
-  },
-  "author": "Marcin Chuć, marcin a.t afya.pl",
-  "license": "Creative Common",
   "node-red": {
+    "version": ">=3.0.0",
     "nodes": {
       "afya-panic-button": "afya-panic-button/afya-panic-button.js"
     }
-  }
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "afya-panic-button/*.js",
+    "afya-panic-button/*.html",
+    "LICENSE",
+    "README.md",
+    "change.log"
+  ],
+  "author": "Marcin Chuć <marcin@afya.pl> (https://github.com/mchuc)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mchuc/node-red-contrib-afya-panic-button.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mchuc/node-red-contrib-afya-panic-button/issues"
+  },
+  "homepage": "https://github.com/mchuc/node-red-contrib-afya-panic-button#readme"
 }
