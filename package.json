@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-afya-panic-button",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Node-RED panic button: reports \"panic\" (or any value) when it receives Y messages within X seconds – e.g. one remote button pressed 5× in 10 s.",
   "main": "afya-panic-button/afya-panic-button.js",
   "scripts": {

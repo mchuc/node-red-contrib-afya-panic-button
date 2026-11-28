@@ -27,6 +27,7 @@ Requires Node-RED ≥ 3.0 and Node.js ≥ 18. The node appears in the **AFYA** p
 
 | Field | Description |
 |---|---|
+| Labels | Language of the descriptions in the edit dialog: *system language* (Polish for a Polish system, English for all others), *English* or *Polski*. Only the descriptions change – fields and values stay the same. |
 | **Clicks** | How many messages trigger panic (Y). |
 | **Within** | Time window in seconds (X), counted from the first click of a series. |
 | **Panic** / **No panic** | Values sent in `msg.payload.state`. |
@@ -63,6 +64,8 @@ npm install node-red-contrib-afya-panic-button
 ```
 
 Wymaga Node-RED ≥ 3.0 i Node.js ≥ 18. Węzeł **panic button** jest w grupie palety **AFYA**.
+
+**Etykiety (Labels)** – język opisów w oknie konfiguracji: *język systemu* (polski dla polskiego systemu, angielski dla każdego innego), *English* albo *Polski*. Zmieniają się tylko opisy – pola i wartości zostają takie same.
 
 ### Konfiguracja
 

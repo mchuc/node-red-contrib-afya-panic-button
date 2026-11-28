@@ -1,3 +1,7 @@
+0.2.0 (2026-11-28):
+- Edit dialog: new setting "Labels" – descriptions in Polish for a Polish system, English for all others,
+  or chosen by hand (English / Polski); only the descriptions change, fields and values stay the same
+
 0.1.0 (2026-11-25):
 - Fixed: the default variable name was the same for every node added in one editor session
 - Variable scope: global or flow (new nodes: global, existing nodes keep flow) + context stores

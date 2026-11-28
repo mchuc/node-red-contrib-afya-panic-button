@@ -37,6 +37,61 @@
     const positiveNumber = (v) => /^\s*\d+([.,]\d+)?\s*$/.test(String(v)) && Number(String(v).replace(',', '.')) > 0;
     const positiveInt = (v) => /^\d+$/.test(String(v).trim()) && Number(v) > 0;
     const esc = (v) => $('<span>').text(v).html();
+    const TEXTS = {
+      en: {
+        name: 'Name', namePh: 'optional', lang: 'Labels', langAuto: 'system language ({l})',
+        secTrigger: 'Trigger', clicks: 'Clicks', times: 'times', within: 'Within', seconds: 'seconds',
+        secAnswers: 'Answers', panic: 'Panic', noPanic: 'No panic',
+        secVar: 'Context variable', variable: 'Variable',
+        varHint: 'Holds <code>{ count, timestamp }</code>. Use a unique name per node, unless several nodes should share one counter.',
+        sRule: '<b>{n} messages within {s} s</b> → {panic}, otherwise {calm} with the current count.',
+        sCounted: 'Clicks are counted in {v} – nodes with the same variable share one counter.',
+      },
+      pl: {
+        name: 'Nazwa', namePh: 'opcjonalnie', lang: 'Etykiety', langAuto: 'język systemu ({l})',
+        secTrigger: 'Wyzwalanie', clicks: 'Kliknięcia', times: 'razy', within: 'W ciągu', seconds: 'sekund',
+        secAnswers: 'Odpowiedzi', panic: 'Panika', noPanic: 'Bez paniki',
+        secVar: 'Zmienna kontekstu', variable: 'Zmienna',
+        varHint: 'Przechowuje <code>{ count, timestamp }</code>. Każdy węzeł – osobna nazwa, chyba że kilka węzłów ma liczyć wspólnie.',
+        sRule: '<b>{n} wiadomości w ciągu {s} s</b> → {panic}, w przeciwnym razie {calm} z bieżącą liczbą.',
+        sCounted: 'Kliknięcia są liczone w {v} – węzły z tą samą zmienną mają wspólny licznik.',
+      },
+    };
+    // --- AFYA: język opisów w oknie konfiguracji („Labels”): auto = polski tylko dla polskiego systemu,
+    //     angielski dla wszystkich innych; zmieniają się tylko opisy – nigdy pola ani wartości.
+    const afyaSystemLocale = function () {
+      try {
+        return localStorage.getItem('editor-language') || navigator.language || '';
+      } catch (e) {
+        return navigator.language || '';
+      }
+    };
+    const afyaLang = function (setting) {
+      if (setting === 'pl' || setting === 'en') return setting;
+      return /^pl\b|^pl[-_]/i.test(afyaSystemLocale()) ? 'pl' : 'en';
+    };
+    /** Tłumaczy otwarte okno (data-t, data-t-ph, data-t-title) i zwraca T(klucz, zmienne) dla tekstów z kodu. */
+    const afyaApplyLang = function (form, texts, setting) {
+      const lang = afyaLang(setting);
+      const T = function (k, v) {
+        let s = (texts[lang] && texts[lang][k]) || texts.en[k] || k;
+        Object.keys(v || {}).forEach(function (n) {
+          s = s.split('{' + n + '}').join(v[n]);
+        });
+        return s;
+      };
+      form.find('[data-t]').each(function () {
+        $(this).html(T($(this).attr('data-t')));
+      });
+      form.find('[data-t-ph]').each(function () {
+        $(this).attr('placeholder', T($(this).attr('data-t-ph')));
+      });
+      form.find('[data-t-title]').each(function () {
+        $(this).attr('title', T($(this).attr('data-t-title')));
+      });
+      form.find('#node-input-lang option[value="auto"]').text(T('langAuto', { l: afyaLang('auto') === 'pl' ? 'Polski' : 'English' }));
+      return T;
+    };
 
     RED.nodes.registerType('afya-panic-button', {
       category: 'AFYA',
@@ -49,6 +104,7 @@
       outputLabels: 'msg.payload = { state, count, timestamp }',
       defaults: {
         name: { value: '' },
+        lang: { value: 'auto' },
         variableName: { value: '', required: true },
         scope: { value: 'global' },
         timeToClick: { value: 10, required: true, validate: positiveNumber },
@@ -63,6 +119,9 @@
         return this.name ? 'node_label_italic' : '';
       },
       oneditprepare: function () {
+        if (['auto', 'en', 'pl'].indexOf(this.lang) < 0) $('#node-input-lang').val('auto'); // starsze węzły
+        const form = $('#node-input-lang').closest('.afya-form');
+        let T = afyaApplyLang(form, TEXTS, $('#node-input-lang').val());
         // nodes saved before 0.1.0 have no scope → they used flow context
         if (!this.scope) $('#node-input-scope').val('flow');
         const name = $('#node-input-variableName');
@@ -78,15 +137,17 @@
           const panic = $('#node-input-answerPanic').val();
           const calm = $('#node-input-answerDontPanic').val();
           $('#afya-panic-summary').html(
-            '<b>' + esc(times) + ' messages within ' + esc(secs) + ' s</b> → <code>state: "' + esc(panic) + '"</code>, ' +
-            'otherwise <code>state: "' + esc(calm) + '"</code> with the current count.<br>' +
-            'Clicks are counted in <code>' + name.typedInput('type') + '.' + esc(plainKey(name.typedInput('value')) || '…') + '</code>' +
-            ' – nodes with the same variable share one counter.'
+            T('sRule', { n: esc(times), s: esc(secs), panic: '<code>state: "' + esc(panic) + '"</code>', calm: '<code>state: "' + esc(calm) + '"</code>' }) + '<br>' +
+            T('sCounted', { v: '<code>' + name.typedInput('type') + '.' + esc(plainKey(name.typedInput('value')) || '…') + '</code>' })
           );
         };
         name.on('change', summary);
         $('#node-input-howManyTimesToClick, #node-input-timeToClick, #node-input-answerPanic, #node-input-answerDontPanic')
           .on('change keyup spin spinstop', function () { setTimeout(summary, 0); });
+        $('#node-input-lang').on('change', function () {
+          T = afyaApplyLang(form, TEXTS, $(this).val());
+          summary();
+        });
         summary();
       },
     });
@@ -96,39 +157,47 @@
 <script type="text/html" data-template-name="afya-panic-button">
   <div class="afya-form">
     <div class="form-row">
-      <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
-      <input type="text" id="node-input-name" placeholder="optional" style="width: 65%;">
+      <label for="node-input-name"><i class="fa fa-tag"></i> <span data-t="name">Name</span></label>
+      <input type="text" id="node-input-name" data-t-ph="namePh" placeholder="optional" style="width: 65%;">
+    </div>
+    <div class="form-row">
+      <label for="node-input-lang"><i class="fa fa-language"></i> <span data-t="lang">Labels</span></label>
+      <select id="node-input-lang" style="width: 65%;">
+        <option value="auto">system language</option>
+        <option value="en">English</option>
+        <option value="pl">Polski</option>
+      </select>
     </div>
 
-    <div class="afya-section"><i class="fa fa-hand-pointer-o"></i> Trigger</div>
+    <div class="afya-section"><i class="fa fa-hand-pointer-o"></i> <span data-t="secTrigger">Trigger</span></div>
     <div class="form-row">
-      <label for="node-input-howManyTimesToClick"><i class="fa fa-repeat"></i> Clicks</label>
+      <label for="node-input-howManyTimesToClick"><i class="fa fa-repeat"></i> <span data-t="clicks">Clicks</span></label>
       <input type="text" id="node-input-howManyTimesToClick" style="width: 80px;">
-      <span class="afya-unit">times</span>
+      <span class="afya-unit" data-t="times">times</span>
     </div>
     <div class="form-row">
-      <label for="node-input-timeToClick"><i class="fa fa-clock-o"></i> Within</label>
+      <label for="node-input-timeToClick"><i class="fa fa-clock-o"></i> <span data-t="within">Within</span></label>
       <input type="text" id="node-input-timeToClick" style="width: 80px;">
-      <span class="afya-unit">seconds</span>
+      <span class="afya-unit" data-t="seconds">seconds</span>
     </div>
 
-    <div class="afya-section"><i class="fa fa-reply"></i> Answers</div>
+    <div class="afya-section"><i class="fa fa-reply"></i> <span data-t="secAnswers">Answers</span></div>
     <div class="form-row">
-      <label for="node-input-answerPanic"><i class="fa fa-exclamation-triangle"></i> Panic</label>
+      <label for="node-input-answerPanic"><i class="fa fa-exclamation-triangle"></i> <span data-t="panic">Panic</span></label>
       <input type="text" id="node-input-answerPanic" style="width: 65%;">
     </div>
     <div class="form-row">
-      <label for="node-input-answerDontPanic"><i class="fa fa-check"></i> No panic</label>
+      <label for="node-input-answerDontPanic"><i class="fa fa-check"></i> <span data-t="noPanic">No panic</span></label>
       <input type="text" id="node-input-answerDontPanic" style="width: 65%;">
     </div>
 
-    <div class="afya-section"><i class="fa fa-database"></i> Context variable</div>
+    <div class="afya-section"><i class="fa fa-database"></i> <span data-t="secVar">Context variable</span></div>
     <div class="form-row">
-      <label for="node-input-variableName"><i class="fa fa-globe"></i> Variable</label>
+      <label for="node-input-variableName"><i class="fa fa-globe"></i> <span data-t="variable">Variable</span></label>
       <input type="text" id="node-input-variableName" style="width: 65%;">
       <input type="hidden" id="node-input-scope">
     </div>
-    <div class="afya-hint">Holds <code>{ count, timestamp }</code>. Use a unique name per node, unless several nodes should share one counter.</div>
+    <div class="afya-hint" data-t="varHint">Holds <code>{ count, timestamp }</code>. Use a unique name per node, unless several nodes should share one counter.</div>
 
     <div class="afya-summary"><i class="fa fa-info-circle"></i><span id="afya-panic-summary"></span></div>
   </div>
